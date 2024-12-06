@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import TimeEntry from '../components/TimeEntry';
 import Summary from '../components/Summary';
 import EntryHistory from '../components/EntryHistory';
@@ -47,56 +47,76 @@ const defaultBudget: Budget = {
 };
 
 export default function Home() {
-  const [budget, setBudget] = useState<Budget>(defaultBudget);
+  // Stan aplikacji
+  const [budget, setBudget] = useState(defaultBudget);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  // Ładowanie danych tylko po stronie klienta
+  // Jednorazowe załadowanie danych
   useEffect(() => {
-    const savedBudget = localStorage.getItem('budget');
-    const savedEntries = localStorage.getItem('timeEntries');
-    
-    if (savedBudget) {
-      setBudget(JSON.parse(savedBudget));
+    if (!initialized && typeof window !== 'undefined') {
+      const savedBudget = localStorage.getItem('budget');
+      const savedEntries = localStorage.getItem('timeEntries');
+      
+      if (savedBudget) {
+        setBudget(JSON.parse(savedBudget));
+      }
+      if (savedEntries) {
+        setEntries(JSON.parse(savedEntries));
+      }
+      
+      setInitialized(true);
     }
-    if (savedEntries) {
-      setEntries(JSON.parse(savedEntries));
-    }
-    
-    setIsLoaded(true);
-  }, []);
+  }, [initialized]);
 
+  // Obliczanie podsumowania
   const summary = {
     capexUsed: entries.reduce((sum, entry) => sum + entry.capexHours, 0),
     opexUsed: entries.reduce((sum, entry) => sum + entry.opexHours, 0),
     supportUsed: entries.reduce((sum, entry) => sum + entry.supportHours, 0)
   };
 
-  const handleBudgetUpdate = (newBudget: Budget) => {
+  // Funkcje obsługujące zmiany
+  const handleBudgetUpdate = useCallback((newBudget: Budget) => {
     setBudget(newBudget);
-    localStorage.setItem('budget', JSON.stringify(newBudget));
-  };
+    if (initialized) {
+      localStorage.setItem('budget', JSON.stringify(newBudget));
+    }
+  }, [initialized]);
 
-  const handleNewEntry = (entry: TimeEntry) => {
-    const newEntries = [...entries, entry];
-    setEntries(newEntries);
-    localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-  };
+  const handleNewEntry = useCallback((entry: TimeEntry) => {
+    setEntries(prev => {
+      const newEntries = [...prev, entry];
+      if (initialized) {
+        localStorage.setItem('timeEntries', JSON.stringify(newEntries));
+      }
+      return newEntries;
+    });
+  }, [initialized]);
 
-  const handleEditEntry = (index: number, updatedEntry: TimeEntry) => {
-    const newEntries = [...entries];
-    newEntries[index] = updatedEntry;
-    setEntries(newEntries);
-    localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-  };
+  const handleEditEntry = useCallback((index: number, updatedEntry: TimeEntry) => {
+    setEntries(prev => {
+      const newEntries = [...prev];
+      newEntries[index] = updatedEntry;
+      if (initialized) {
+        localStorage.setItem('timeEntries', JSON.stringify(newEntries));
+      }
+      return newEntries;
+    });
+  }, [initialized]);
 
-  const handleDeleteEntry = (index: number) => {
-    const newEntries = entries.filter((_, i) => i !== index);
-    setEntries(newEntries);
-    localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-  };
+  const handleDeleteEntry = useCallback((index: number) => {
+    setEntries(prev => {
+      const newEntries = prev.filter((_, i) => i !== index);
+      if (initialized) {
+        localStorage.setItem('timeEntries', JSON.stringify(newEntries));
+      }
+      return newEntries;
+    });
+  }, [initialized]);
 
-  if (!isLoaded) {
+  // Ekran ładowania
+  if (!initialized) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Ładowanie...</div>
