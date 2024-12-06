@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Card from './Card';
 
 interface Overtime {
@@ -12,9 +12,12 @@ interface Overtime {
 
 interface OvertimeEntryProps {
   onSave: (overtime: Overtime) => void;
+  initialOvertime?: Overtime;
+  onCancel?: () => void;
+  existingMonths: string[];
 }
 
-export default function OvertimeEntry({ onSave }: OvertimeEntryProps) {
+export default function OvertimeEntry({ onSave, initialOvertime, onCancel, existingMonths }: OvertimeEntryProps) {
   const [overtime, setOvertime] = useState<Overtime>({
     date: '',
     startTime: '',
@@ -23,6 +26,14 @@ export default function OvertimeEntry({ onSave }: OvertimeEntryProps) {
     description: '',
     duration: 0
   });
+
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialOvertime) {
+      setOvertime(initialOvertime);
+    }
+  }, [initialOvertime]);
 
   // Obliczanie czasu trwania nadgodzin
   const calculateDuration = (start: string, end: string): number => {
@@ -34,22 +45,44 @@ export default function OvertimeEntry({ onSave }: OvertimeEntryProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (overtime.date && overtime.startTime && overtime.endTime) {
+      // Sprawdź czy miesiąc nie jest już rozliczony
+      const month = overtime.date.slice(0, 7);
+      if (!initialOvertime && existingMonths.includes(month)) {
+        setError('Nie można dodać nadgodzin - miesiąc został już rozliczony');
+        return;
+      }
+
       const duration = calculateDuration(overtime.startTime, overtime.endTime);
       onSave({ ...overtime, duration });
-      // Reset formularza
-      setOvertime({
-        date: '',
-        startTime: '',
-        endTime: '',
-        incidentNumber: '',
-        description: '',
-        duration: 0
-      });
+      
+      // Reset formularza tylko jeśli to nie edycja
+      if (!initialOvertime) {
+        setOvertime({
+          date: '',
+          startTime: '',
+          endTime: '',
+          incidentNumber: '',
+          description: '',
+          duration: 0
+        });
+        setError(null);
+      }
     }
   };
 
+  // Sprawdzanie przy zmianie daty
+  const handleDateChange = (date: string) => {
+    const month = date.slice(0, 7);
+    if (!initialOvertime && existingMonths.includes(month)) {
+      setError('Nie można dodać nadgodzin - miesiąc został już rozliczony');
+    } else {
+      setError(null);
+    }
+    setOvertime({...overtime, date});
+  };
+
   return (
-    <Card title="Rejestracja nadgodzin">
+    <Card title={initialOvertime ? "Edycja nadgodzin" : "Rejestracja nadgodzin"}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
@@ -57,10 +90,17 @@ export default function OvertimeEntry({ onSave }: OvertimeEntryProps) {
             <input
               type="date"
               value={overtime.date}
-              onChange={(e) => setOvertime({...overtime, date: e.target.value})}
-              className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md text-slate-900"
+              onChange={(e) => handleDateChange(e.target.value)}
+              className={`mt-1 w-full px-3 py-2 border rounded-md ${
+                error ? 'border-red-500' : 'border-slate-300'
+              } text-slate-900`}
               required
             />
+            {error && (
+              <p className="mt-2 text-sm text-red-600">
+                {error}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700">Nr incydentu</label>
@@ -108,12 +148,28 @@ export default function OvertimeEntry({ onSave }: OvertimeEntryProps) {
           />
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-        >
-          Zapisz nadgodziny
-        </button>
+        <div className="flex justify-end space-x-4">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-800 focus:outline-none"
+            >
+              Anuluj
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={!!error}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+              error
+                ? 'bg-slate-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            } focus:outline-none`}
+          >
+            {initialOvertime ? 'Zapisz zmiany' : 'Dodaj nadgodziny'}
+          </button>
+        </div>
       </form>
     </Card>
   );

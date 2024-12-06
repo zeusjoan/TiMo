@@ -3,8 +3,6 @@ import Card from './Card';
 import Modal from './Modal';
 import BudgetForm from './BudgetForm';
 import BudgetChart from './BudgetChart';
-import ExportPDF from './ExportPDF';
-import BudgetAlert from './BudgetAlert';
 
 interface Overtime {
   date: string;
@@ -52,14 +50,14 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const currentMonthEntries = entries.filter(entry => entry.month === currentMonth);
+  const currentMonthEntries = entries.filter((entry: TimeEntry) => entry.month === currentMonth);
   
   const currentMonthSummary = {
-    capexUsed: currentMonthEntries.reduce((sum, entry) => sum + entry.capexHours, 0),
-    opexUsed: currentMonthEntries.reduce((sum, entry) => sum + entry.opexHours, 0),
-    supportUsed: currentMonthEntries.reduce((sum, entry) => sum + entry.supportHours, 0),
-    overtimeHours: currentMonthEntries.reduce((sum, entry) => 
-      sum + (entry.overtimes?.reduce((oSum, ot) => oSum + ot.duration, 0) || 0), 0
+    capexUsed: currentMonthEntries.reduce((sum: number, entry: TimeEntry) => sum + entry.capexHours, 0),
+    opexUsed: currentMonthEntries.reduce((sum: number, entry: TimeEntry) => sum + entry.opexHours, 0),
+    supportUsed: currentMonthEntries.reduce((sum: number, entry: TimeEntry) => sum + entry.supportHours, 0),
+    overtimeHours: currentMonthEntries.reduce((sum: number, entry: TimeEntry) => 
+      sum + (entry.overtimes?.reduce((oSum: number, ot: Overtime) => oSum + ot.duration, 0) || 0), 0
     )
   };
 
@@ -93,28 +91,6 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
         {budget.orderNumber ? 'Edytuj zamówienie' : 'Dodaj zamówienie'}
       </button>
     }>
-      {/* Alerty o przekroczeniu budżetu */}
-      <div className="mb-6">
-        <BudgetAlert
-          category="CAPEX"
-          used={summary.capexUsed}
-          total={budget.capex}
-          type="capex"
-        />
-        <BudgetAlert
-          category="OPEX"
-          used={summary.opexUsed}
-          total={budget.opex}
-          type="opex"
-        />
-        <BudgetAlert
-          category="konsultacji"
-          used={summary.supportUsed}
-          total={budget.support}
-          type="support"
-        />
-      </div>
-
       {/* Informacje o zamówieniu */}
       <div className="mb-6">
         <div className="grid grid-cols-2 gap-6">
@@ -193,15 +169,14 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
             <div>
               <p className="text-sm text-slate-600 mb-1">Wartość nadgodzin</p>
               <p className="text-xl font-semibold text-slate-900">
-                {(currentMonthSummary.overtimeHours * budget.hourlyRate * 1.5).toFixed(2)} PLN
+                {(currentMonthSummary.overtimeHours * budget.hourlyRate).toFixed(2)} PLN
               </p>
-              <p className="text-xs text-slate-500">(stawka × 150%)</p>
             </div>
           </div>
         </div>
 
         {/* Lista nadgodzin w bieżącym miesiącu */}
-        {currentMonthEntries.map(entry => 
+        {currentMonthEntries.map((entry: TimeEntry) => 
           entry.overtimes?.length > 0 && (
             <div key={entry.month} className="mt-4">
               <table className="min-w-full divide-y divide-slate-200">
@@ -214,7 +189,7 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {entry.overtimes.map((overtime, idx) => (
+                  {entry.overtimes.map((overtime: Overtime, idx: number) => (
                     <tr key={idx}>
                       <td className="px-4 py-2 text-sm text-slate-900">{overtime.date}</td>
                       <td className="px-4 py-2 text-sm text-slate-900">
@@ -229,62 +204,6 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
             </div>
           )
         )}
-      </div>
-
-      {/* Całkowite podsumowanie (zaktualizowane o nadgodziny) */}
-      <div className="mt-8 pt-6 border-t-2 border-slate-200">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-slate-900">Podsumowanie całościowe</h3>
-          <div className="space-x-4">
-            <ExportPDF budget={budget} entries={entries} currentMonth={true} />
-            <ExportPDF budget={budget} entries={entries} currentMonth={false} />
-          </div>
-        </div>
-        <div className="bg-slate-50 rounded-lg p-6">
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-sm font-medium text-slate-600 mb-4">Godziny standardowe</h4>
-              <dl className="space-y-2">
-                <div className="flex justify-between">
-                  <dt className="text-slate-600">CAPEX:</dt>
-                  <dd className="font-medium text-slate-900">{currentMonthSummary.capexUsed}h</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-600">OPEX:</dt>
-                  <dd className="font-medium text-slate-900">{currentMonthSummary.opexUsed}h</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-600">Konsultacje:</dt>
-                  <dd className="font-medium text-slate-900">{currentMonthSummary.supportUsed}h</dd>
-                </div>
-              </dl>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-slate-600 mb-4">Wartość całkowita</h4>
-              <dl className="space-y-2">
-                <div className="flex justify-between">
-                  <dt className="text-slate-600">Standardowe:</dt>
-                  <dd className="font-medium text-slate-900">
-                    {((currentMonthSummary.capexUsed + currentMonthSummary.opexUsed + currentMonthSummary.supportUsed) * budget.hourlyRate).toFixed(2)} PLN
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-slate-600">Nadgodziny:</dt>
-                  <dd className="font-medium text-slate-900">
-                    {(currentMonthSummary.overtimeHours * budget.hourlyRate * 1.5).toFixed(2)} PLN
-                  </dd>
-                </div>
-                <div className="flex justify-between border-t border-slate-200 pt-2 mt-2">
-                  <dt className="font-medium text-slate-900">Łącznie:</dt>
-                  <dd className="font-bold text-slate-900">
-                    {((currentMonthSummary.capexUsed + currentMonthSummary.opexUsed + currentMonthSummary.supportUsed) * budget.hourlyRate + 
-                      currentMonthSummary.overtimeHours * budget.hourlyRate * 1.5).toFixed(2)} PLN
-                  </dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Modal do edycji budżetu */}
