@@ -21,7 +21,7 @@ interface TimeEntry {
 
 interface EntryHistoryProps {
   entries: TimeEntry[];
-  onEdit: (index: number, entry: TimeEntry) => void;
+  onEdit: (index: number, updatedEntry: TimeEntry) => void;
   onDelete: (index: number) => void;
 }
 
@@ -67,7 +67,7 @@ export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistory
                     </td>
                     <td className="px-4 py-2 space-x-2">
                       <button
-                        onClick={() => onEdit(index, entry)}
+                        onClick={() => onEdit(index, {...entry})}
                         className="text-blue-600 hover:text-blue-800"
                       >
                         Edytuj
