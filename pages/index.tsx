@@ -47,12 +47,11 @@ const defaultBudget: Budget = {
 };
 
 export default function Home() {
-  // Stan aplikacji
-  const [budget, setBudget] = useState(defaultBudget);
+  const [budget, setBudget] = useState<Budget>(defaultBudget);
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [initialized, setInitialized] = useState(false);
 
-  // Jednorazowe załadowanie danych
+  // Ładowanie danych z localStorage
   useEffect(() => {
     if (!initialized && typeof window !== 'undefined') {
       const savedBudget = localStorage.getItem('budget');
@@ -69,53 +68,42 @@ export default function Home() {
     }
   }, [initialized]);
 
-  // Obliczanie podsumowania
   const summary = {
     capexUsed: entries.reduce((sum, entry) => sum + entry.capexHours, 0),
     opexUsed: entries.reduce((sum, entry) => sum + entry.opexHours, 0),
     supportUsed: entries.reduce((sum, entry) => sum + entry.supportHours, 0)
   };
 
-  // Funkcje obsługujące zmiany
   const handleBudgetUpdate = useCallback((newBudget: Budget) => {
     setBudget(newBudget);
-    if (initialized) {
-      localStorage.setItem('budget', JSON.stringify(newBudget));
-    }
-  }, [initialized]);
+    localStorage.setItem('budget', JSON.stringify(newBudget));
+  }, []);
 
   const handleNewEntry = useCallback((entry: TimeEntry) => {
     setEntries(prev => {
       const newEntries = [...prev, entry];
-      if (initialized) {
-        localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-      }
+      localStorage.setItem('timeEntries', JSON.stringify(newEntries));
       return newEntries;
     });
-  }, [initialized]);
+  }, []);
 
   const handleEditEntry = useCallback((index: number, updatedEntry: TimeEntry) => {
     setEntries(prev => {
       const newEntries = [...prev];
       newEntries[index] = updatedEntry;
-      if (initialized) {
-        localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-      }
+      localStorage.setItem('timeEntries', JSON.stringify(newEntries));
       return newEntries;
     });
-  }, [initialized]);
+  }, []);
 
   const handleDeleteEntry = useCallback((index: number) => {
     setEntries(prev => {
       const newEntries = prev.filter((_, i) => i !== index);
-      if (initialized) {
-        localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-      }
+      localStorage.setItem('timeEntries', JSON.stringify(newEntries));
       return newEntries;
     });
-  }, [initialized]);
+  }, []);
 
-  // Ekran ładowania
   if (!initialized) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
@@ -144,7 +132,7 @@ export default function Home() {
           />
           <TimeEntry onSave={handleNewEntry} />
           <EntryHistory 
-            entries={entries} 
+            entries={entries}
             onEdit={handleEditEntry}
             onDelete={handleDeleteEntry}
           />

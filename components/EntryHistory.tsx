@@ -21,8 +21,8 @@ interface TimeEntry {
 
 interface EntryHistoryProps {
   entries: TimeEntry[];
-  onEdit: (index: number, updatedEntry: TimeEntry) => void;
-  onDelete: (index: number) => void;
+  onEdit?: (index: number, updatedEntry: TimeEntry) => void;  // Opcjonalne
+  onDelete?: (index: number) => void;  // Opcjonalne
 }
 
 export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistoryProps) {
@@ -38,7 +38,7 @@ export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistory
               <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Konsultacje</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Nadgodziny</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-slate-500">Suma</th>
-              <th className="px-4 py-2"></th>
+              {(onEdit || onDelete) && <th className="px-4 py-2"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -65,20 +65,26 @@ export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistory
                     <td className="px-4 py-2 text-sm font-medium text-slate-900">
                       {totalHours}h
                     </td>
-                    <td className="px-4 py-2 space-x-2">
-                      <button
-                        onClick={() => onEdit(index, {...entry})}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        Edytuj
-                      </button>
-                      <button
-                        onClick={() => onDelete(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Usuń
-                      </button>
-                    </td>
+                    {(onEdit || onDelete) && (
+                      <td className="px-4 py-2 space-x-2">
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(index, {...entry})}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Edytuj
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Usuń
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
