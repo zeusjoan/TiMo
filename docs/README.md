@@ -7,11 +7,9 @@
 4. [Technologie](#technologie)
 5. [Bazy danych](#bazy-danych)
 6. [Funkcjonalności](#funkcjonalności)
-7. [API](#api)
-8. [Rozwój projektu](#rozwój-projektu)
 
 ## Wprowadzenie
-TiMo to aplikacja webowa zbudowana w oparciu o framework Next.js, służąca do zarządzania procesami w firmie. Aplikacja pozwala na generowanie raportów PDF, zarządzanie danymi w bazie MSSQL, oraz oferuje intuicyjny interfejs użytkownika.
+TiMo to aplikacja webowa zbudowana w oparciu o framework Next.js, służąca do zarządzania procesami w firmie. Aplikacja pozwala na generowanie raportów PDF, zarządzanie danymi w bazie SQLite, oraz oferuje intuicyjny interfejs użytkownika.
 
 ## Instalacja na MacBooku
 
@@ -22,26 +20,15 @@ TiMo to aplikacja webowa zbudowana w oparciu o framework Next.js, służąca do 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-#### Node.js i npm
+#### Node.js
 ```bash
 brew install node@18
-echo 'export PATH="/usr/local/opt/node@18/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
 ```
 
-#### Docker Desktop dla Mac
-Pobierz i zainstaluj Docker Desktop ze strony: https://www.docker.com/products/docker-desktop
-
-Po instalacji uruchom Docker Desktop.
-
-#### MSSQL w Dockerze
+#### SQLite (jest już zainstalowany na MacOS)
+W razie potrzeby można zainstalować przez:
 ```bash
-docker pull mcr.microsoft.com/mssql/server
-docker run -d --name mssql-server \
-    -e "ACCEPT_EULA=Y" \
-    -e "SA_PASSWORD=YourStrong@Passw0rd" \
-    -p 1433:1433 \
-    mcr.microsoft.com/mssql/server
+brew install sqlite3
 ```
 
 ### 2. Instalacja aplikacji
@@ -60,19 +47,6 @@ cd TiMo
 npm install
 ```
 
-#### Konfiguracja środowiska
-```bash
-touch .env
-```
-Dodaj do pliku .env:
-```
-DB_HOST=localhost
-DB_PORT=1433
-DB_USER=sa
-DB_PASSWORD=YourStrong@Passw0rd
-DB_NAME=TiMoDB
-```
-
 #### Uruchomienie aplikacji
 ```bash
 npm run dev
@@ -81,17 +55,7 @@ Aplikacja będzie dostępna pod adresem: http://localhost:3000
 
 ### 3. Rozwiązywanie problemów
 
-#### Problem z połączeniem do MSSQL
-Sprawdź status kontenera:
-```bash
-docker ps
-```
-Restart kontenera jeśli potrzebny:
-```bash
-docker restart mssql-server
-```
-
-#### Problem z node_modules
+Jeśli wystąpią problemy z modułami node:
 ```bash
 rm -rf node_modules
 rm package-lock.json
@@ -103,17 +67,29 @@ npm install
 - `/contexts` - Konteksty React do zarządzania stanem aplikacji
 - `/hooks` - Własne hooki React
 - `/lib` - Biblioteki i narzędzia pomocnicze
-- `/models` - Modele danych dla baz danych
+- `/models` - Modele danych dla bazy SQLite
 - `/pages` - Strony aplikacji i endpointy API
 - `/public` - Zasoby statyczne (obrazy, ikony, itp.)
 - `/styles` - Style CSS i konfiguracja Tailwind
 - `/types` - Definicje typów TypeScript
 
-## Bazy danych
-### Microsoft SQL Server
-MSSQL jest używany jako główna baza danych dla:
+## Baza danych
+SQLite jest używany jako główna baza danych dla:
 - Przechowywania danych klientów
 - Zarządzania zamówieniami
 - Przechowywania historii operacji
+- Konfiguracji aplikacji
 
-[Reszta dokumentacji pozostaje bez zmian]
+## Technologie
+- **Frontend**: 
+  - Next.js 15.0.3
+  - React 19.0.0-rc
+  - TypeScript
+  - Tailwind CSS
+  
+- **Biblioteki**:
+  - date-fns - formatowanie i manipulacja datami
+  - jspdf - generowanie dokumentów PDF
+  - jspdf-autotable - tworzenie tabel w PDF
+  - sequelize - ORM dla SQLite
+  - sqlite3 - lekka, plikowa baza danych
