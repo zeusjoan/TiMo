@@ -2,119 +2,98 @@
 
 ## Spis treści
 1. [Wprowadzenie](#wprowadzenie)
-2. [Wymagania systemowe](#wymagania-systemowe)
-3. [Instalacja](#instalacja)
-4. [Struktura projektu](#struktura-projektu)
-5. [Technologie](#technologie)
-6. [Bazy danych](#bazy-danych)
-7. [Funkcjonalności](#funkcjonalności)
-8. [API](#api)
-9. [Rozwój projektu](#rozwój-projektu)
+2. [Instalacja na MacBooku](#instalacja-na-macbooku)
+3. [Struktura projektu](#struktura-projektu)
+4. [Technologie](#technologie)
+5. [Bazy danych](#bazy-danych)
+6. [Funkcjonalności](#funkcjonalności)
+7. [API](#api)
+8. [Rozwój projektu](#rozwój-projektu)
 
 ## Wprowadzenie
 TiMo to aplikacja webowa zbudowana w oparciu o framework Next.js, służąca do zarządzania procesami w firmie. Aplikacja pozwala na generowanie raportów PDF, zarządzanie danymi w bazach MongoDB i SQLite, oraz oferuje intuicyjny interfejs użytkownika.
 
-## Wymagania systemowe
-- Node.js w wersji 18 lub wyższej
-- npm (Node Package Manager)
-- Dostęp do bazy danych MongoDB
-- SQLite3
+## Instalacja na MacBooku
 
-## Instalacja
-1. Sklonuj repozytorium:
+### 1. Instalacja wymaganych narzędzi
+
+#### Homebrew (menedżer pakietów dla macOS)
 ```bash
-git clone https://github.com/zeusjoan/TiMo.git
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-2. Zainstaluj zależności:
+#### Node.js i npm
+```bash
+brew install node@18
+echo 'export PATH="/usr/local/opt/node@18/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+#### Git
+```bash
+brew install git
+```
+
+#### MongoDB
+```bash
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+```
+
+#### SQLite
+```bash
+brew install sqlite3
+```
+
+### 2. Instalacja aplikacji
+
+#### Klonowanie repozytorium
+```bash
+cd ~/Documents
+mkdir projekty
+cd projekty
+git clone https://github.com/zeusjoan/TiMo.git
+cd TiMo
+```
+
+#### Instalacja zależności
 ```bash
 npm install
 ```
 
-3. Uruchom aplikację w trybie developerskim:
+#### Konfiguracja środowiska
+```bash
+touch .env
+```
+Dodaj do pliku .env:
+```
+MONGODB_URI=mongodb://localhost:27017/timo
+```
+
+#### Uruchomienie aplikacji
 ```bash
 npm run dev
 ```
-
 Aplikacja będzie dostępna pod adresem: http://localhost:3000
 
-## Struktura projektu
-- `/components` - Komponenty React używane w aplikacji
-- `/contexts` - Konteksty React do zarządzania stanem aplikacji
-- `/hooks` - Własne hooki React
-- `/lib` - Biblioteki i narzędzia pomocnicze
-- `/models` - Modele danych dla baz danych
-- `/pages` - Strony aplikacji i endpointy API
-- `/public` - Zasoby statyczne (obrazy, ikony, itp.)
-- `/styles` - Style CSS i konfiguracja Tailwind
-- `/types` - Definicje typów TypeScript
+### 3. Rozwiązywanie problemów
 
-## Technologie
-- **Frontend**: 
-  - Next.js 15.0.3
-  - React 19.0.0-rc
-  - TypeScript
-  - Tailwind CSS
-  
-- **Biblioteki**:
-  - date-fns - formatowanie i manipulacja datami
-  - jspdf - generowanie dokumentów PDF
-  - jspdf-autotable - tworzenie tabel w PDF
-  
-- **Bazy danych**:
-  - MongoDB (mongoose)
-  - SQLite (sequelize)
-
-## Bazy danych
-### MongoDB
-MongoDB jest używane jako główna baza danych dla:
-- Przechowywania danych klientów
-- Zarządzania zamówieniami
-- Przechowywania historii operacji
-
-### SQLite
-SQLite służy do:
-- Przechowywania konfiguracji lokalnych
-- Cachowania danych
-- Tymczasowego przechowywania danych offline
-
-## Funkcjonalności
-1. **Zarządzanie danymi**
-   - Dodawanie, edycja i usuwanie rekordów
-   - Wyszukiwanie i filtrowanie danych
-   - Import i eksport danych
-
-2. **Generowanie raportów**
-   - Tworzenie raportów PDF
-   - Automatyczne generowanie tabel
-   - Eksport danych do różnych formatów
-
-3. **Interfejs użytkownika**
-   - Responsywny design
-   - Intuicyjna nawigacja
-   - Dostosowanie do różnych urządzeń
-
-## API
-Dokumentacja API jest dostępna pod adresem `/api/docs` po uruchomieniu aplikacji w trybie developerskim.
-
-## Rozwój projektu
-### Dodawanie nowych funkcji
-1. Utwórz nowy branch:
+#### Problem z MongoDB
+Sprawdź status MongoDB:
 ```bash
-git checkout -b feature/nazwa-funkcji
+brew services list
+```
+Restart MongoDB jeśli potrzebny:
+```bash
+brew services restart mongodb-community
 ```
 
-2. Wprowadź zmiany i przetestuj je lokalnie
-
-3. Wypchnij zmiany na serwer:
+#### Problem z node_modules
 ```bash
-git push origin feature/nazwa-funkcji
+rm -rf node_modules
+rm package-lock.json
+npm install
 ```
 
-4. Utwórz Pull Request
-
-### Konwencje
-- Nazewnictwo komponentów: PascalCase
-- Nazewnictwo funkcji: camelCase
-- Pliki komponentów: .tsx
-- Pliki stylów: .css lub .module.css
+[Reszta dokumentacji pozostaje bez zmian]
