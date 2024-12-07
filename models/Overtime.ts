@@ -1,34 +1,36 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../lib/database';
 
-interface TimeEntryAttributes {
+interface OvertimeAttributes {
   id?: number;
   userId: string;
-  month: string;
-  capexHours: number;
-  opexHours: number;
-  supportHours: number;
-  overtimeHours: number; // Suma zatwierdzonych nadgodzin
+  month: string; // Format YYYY-MM
+  date: string;
+  startTime: string;
+  endTime: string;
+  incidentNumber: string;
   description: string;
-  isApproved: boolean; // Czy miesiąc został zatwierdzony
+  duration: number;
+  isApproved: boolean; // Czy nadgodziny zostały zatwierdzone w rozliczeniu miesięcznym
 }
 
-class TimeEntry extends Model<TimeEntryAttributes> implements TimeEntryAttributes {
+class Overtime extends Model<OvertimeAttributes> implements OvertimeAttributes {
   public id!: number;
   public userId!: string;
   public month!: string;
-  public capexHours!: number;
-  public opexHours!: number;
-  public supportHours!: number;
-  public overtimeHours!: number;
+  public date!: string;
+  public startTime!: string;
+  public endTime!: string;
+  public incidentNumber!: string;
   public description!: string;
+  public duration!: number;
   public isApproved!: boolean;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-TimeEntry.init(
+Overtime.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -43,29 +45,29 @@ TimeEntry.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    capexHours: {
-      type: DataTypes.FLOAT,
+    date: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 0,
     },
-    opexHours: {
-      type: DataTypes.FLOAT,
+    startTime: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 0,
     },
-    supportHours: {
-      type: DataTypes.FLOAT,
+    endTime: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 0,
     },
-    overtimeHours: {
-      type: DataTypes.FLOAT,
+    incidentNumber: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 0,
     },
     description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    duration: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
     },
     isApproved: {
       type: DataTypes.BOOLEAN,
@@ -75,14 +77,13 @@ TimeEntry.init(
   },
   {
     sequelize,
-    modelName: 'TimeEntry',
+    modelName: 'Overtime',
     indexes: [
       {
-        unique: true,
         fields: ['userId', 'month']
       }
     ]
   }
 );
 
-export { TimeEntry, type TimeEntryAttributes };
+export { Overtime, type OvertimeAttributes };

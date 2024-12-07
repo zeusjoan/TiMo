@@ -3,19 +3,105 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Zwiększamy rozmiar kalendarza */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 1;
+  filter: invert(0.8);
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%) scale(1.5);
+}
+
+/* Stylizacja pól daty i czasu */
+input[type="date"],
+input[type="month"],
+input[type="time"] {
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: white;
+  padding-right: 40px !important;
+  cursor: pointer;
+}
+
+/* Zwiększamy rozmiar wyskakującego kalendarza */
+::-webkit-datetime-edit {
+  padding: 0;
+  margin: 0;
+}
+
+::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+  margin: 0;
+}
+
+::-webkit-datetime-edit-text {
+  padding: 0 4px;
+}
+
+::-webkit-datetime-edit-month-field,
+::-webkit-datetime-edit-day-field,
+::-webkit-datetime-edit-year-field,
+::-webkit-datetime-edit-hour-field,
+::-webkit-datetime-edit-minute-field,
+::-webkit-datetime-edit-ampm-field {
+  padding: 0 4px;
+}
+
+/* Stylizacja kalendarza w Firefoxie */
+input[type="date"]::-moz-calendar-picker-indicator,
+input[type="month"]::-moz-calendar-picker-indicator {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 1;
+  filter: invert(0.8);
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%) scale(1.5);
+}
+
+/* Zwiększamy rozmiar czcionki w kalendarzu */
+input[type="date"],
+input[type="month"],
+input[type="time"] {
+  font-size: 14px;
+  color: #1a1a1a;
+}
+
+/* Stylizacja dla Safari */
+@supports (-webkit-touch-callout: none) {
+  input[type="date"],
+  input[type="month"],
+  input[type="time"] {
+    min-height: 42px;
+    line-height: 42px;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* Stylizacja dla Chrome */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  input[type="date"],
+  input[type="month"],
+  input[type="time"] {
+    min-height: 42px;
+  }
+}
+
+/* Zwiększamy rozmiar kalendarza w Chrome */
+::-webkit-calendar-picker {
+  font-size: 16px;
+  transform: scale(1.2);
 }

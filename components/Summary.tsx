@@ -3,37 +3,7 @@ import Card from './Card';
 import Modal from './Modal';
 import BudgetForm from './BudgetForm';
 import BudgetChart from './BudgetChart';
-
-interface Overtime {
-  date: string;
-  startTime: string;
-  endTime: string;
-  incidentNumber: string;
-  description: string;
-  duration: number;
-}
-
-interface TimeEntry {
-  month: string;
-  capexHours: number;
-  opexHours: number;
-  supportHours: number;
-  overtimes: Overtime[];
-  description: string;
-  overtimeHours: number;
-}
-
-interface Budget {
-  orderNumber: string;
-  supplierNumber: string;
-  documentDate: string;
-  deliveryDate: string;
-  contractNumber: string;
-  capex: number;
-  opex: number;
-  support: number;
-  hourlyRate: number;
-}
+import { TimeEntry, Overtime, Budget } from '../types';
 
 interface SummaryProps {
   budget: Budget;
@@ -177,7 +147,7 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
 
         {/* Lista nadgodzin w bieżącym miesiącu */}
         {currentMonthEntries.map((entry: TimeEntry) => 
-          entry.overtimes?.length > 0 && (
+          entry.overtimes && entry.overtimes.length > 0 && (
             <div key={entry.month} className="mt-4">
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">

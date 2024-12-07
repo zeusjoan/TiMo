@@ -1,49 +1,52 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import TimeEntry from '../components/TimeEntry';
 import Summary from '../components/Summary';
 import EntryHistory from '../components/EntryHistory';
 import { useAuth } from '../contexts/AuthContext';
 import { useTimeEntries } from '../hooks/useTimeEntries';
-
-interface Budget {
-  orderNumber: string;
-  supplierNumber: string;
-  documentDate: string;
-  deliveryDate: string;
-  contractNumber: string;
-  capex: number;
-  opex: number;
-  support: number;
-  hourlyRate: number;
-}
-
-const defaultBudget: Budget = {
-  orderNumber: '',
-  supplierNumber: '',
-  documentDate: '',
-  deliveryDate: '',
-  contractNumber: '',
-  capex: 0,
-  opex: 0,
-  support: 0,
-  hourlyRate: 0
-};
+import { useOvertimes } from '../hooks/useOvertimes';
+import { useBudget } from '../hooks/useBudget';
+import { TimeEntry as TimeEntryType, Overtime, Budget } from '../types';
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState('overtime'); // 'overtime' lub 'monthly'
   const { user, logout } = useAuth();
-  const [budget, setBudget] = useState<Budget>(defaultBudget);
-  const { entries, loading, fetchEntries, addEntry, updateEntry, deleteEntry } = useTimeEntries();
+  const { 
+    entries, 
+    loading: entriesLoading, 
+    error: entriesError,
+    fetchEntries, 
+    approveMonth,
+    updateEntry, 
+    deleteEntry,
+    getApprovedMonths
+  } = useTimeEntries();
+
+  const {
+    overtimes,
+    loading: overtimesLoading,
+    error: overtimesError,
+    fetchOvertimes,
+    addOvertime,
+    deleteOvertime
+  } = useOvertimes();
+  
+  const { 
+    budget, 
+    loading: budgetLoading, 
+    error: budgetError,
+    fetchBudget, 
+    updateBudget 
+  } = useBudget();
 
   useEffect(() => {
     if (user) {
+      console.log('Pobieranie danych dla użytkownika:', user);
       fetchEntries();
-      // Wczytaj budżet z localStorage (można później przenieść do bazy danych)
-      const savedBudget = localStorage.getItem(`${user}_budget`);
-      if (savedBudget) {
-        setBudget(JSON.parse(savedBudget));
-      }
+      fetchOvertimes();
+      fetchBudget();
     }
-  }, [user, fetchEntries]);
+  }, [user, fetchEntries, fetchOvertimes, fetchBudget]);
 
   const summary = {
     capexUsed: entries.reduce((sum, entry) => sum + entry.capexHours, 0),
@@ -51,56 +54,91 @@ export default function Home() {
     supportUsed: entries.reduce((sum, entry) => sum + entry.supportHours, 0)
   };
 
-  const handleBudgetUpdate = (newBudget: Budget) => {
-    setBudget(newBudget);
-    if (user) {
-      localStorage.setItem(`${user}_budget`, JSON.stringify(newBudget));
+  const handleBudgetUpdate = async (newBudget: Budget) => {
+    try {
+      await updateBudget(newBudget);
+      console.log('Budżet zaktualizowany pomyślnie');
+    } catch (error) {
+      console.error('Błąd podczas aktualizacji budżetu:', error);
+      alert('Wystąpił błąd podczas zapisywania budżetu');
     }
   };
 
-  const handleNewEntry = async (entry: any) => {
+  const handleApproveMonth = async (entry: Omit<TimeEntryType, 'id' | 'userId' | 'isApproved' | 'overtimeHours' | 'overtimes'>) => {
     try {
-      await addEntry(entry);
-    } catch (error) {
-      console.error('Błąd podczas dodawania wpisu:', error);
-      alert('Wystąpił błąd podczas zapisywania wpisu');
+      await approveMonth(entry);
+      console.log('Miesiąc zatwierdzony pomyślnie');
+      // Odświeżamy dane po zatwierdzeniu
+      fetchEntries();
+      fetchOvertimes();
+    } catch (error: any) {
+      console.error('Błąd podczas zatwierdzania miesiąca:', error);
+      alert(error.message || 'Wystąpił błąd podczas zatwierdzania miesiąca');
     }
   };
 
-  const handleEditEntry = async (index: number, updatedEntry: any) => {
+  const handleEditEntry = async (id: number, updatedEntry: Partial<TimeEntryType>) => {
     try {
-      const entryToUpdate = entries[index];
-      if (entryToUpdate._id) {
-        await updateEntry(entryToUpdate._id, updatedEntry);
-      }
-    } catch (error) {
+      await updateEntry(id, updatedEntry);
+      console.log('Wpis zaktualizowany pomyślnie');
+    } catch (error: any) {
       console.error('Błąd podczas aktualizacji wpisu:', error);
-      alert('Wystąpił błąd podczas aktualizacji wpisu');
+      alert(error.message || 'Wystąpił błąd podczas aktualizacji wpisu');
     }
   };
 
-  const handleDeleteEntry = async (index: number) => {
+  const handleDeleteEntry = async (id: number) => {
     try {
-      const entryToDelete = entries[index];
-      if (entryToDelete._id) {
-        await deleteEntry(entryToDelete._id);
-      }
-    } catch (error) {
+      await deleteEntry(id);
+      console.log('Wpis usunięty pomyślnie');
+    } catch (error: any) {
       console.error('Błąd podczas usuwania wpisu:', error);
-      alert('Wystąpił błąd podczas usuwania wpisu');
+      alert(error.message || 'Wystąpił błąd podczas usuwania wpisu');
     }
   };
 
-  // Reset stanu przy wylogowaniu
+  const handleAddOvertime = async (overtime: Omit<Overtime, 'id' | 'userId' | 'isApproved'>) => {
+    try {
+      await addOvertime(overtime);
+      console.log('Nadgodziny dodane pomyślnie');
+      fetchOvertimes(); // Odświeżamy listę nadgodzin
+    } catch (error: any) {
+      console.error('Błąd podczas dodawania nadgodzin:', error);
+      alert(error.message || 'Wystąpił błąd podczas dodawania nadgodzin');
+    }
+  };
+
+  const handleDeleteOvertime = async (id: number) => {
+    try {
+      await deleteOvertime(id);
+      console.log('Nadgodziny usunięte pomyślnie');
+      fetchOvertimes(); // Odświeżamy listę nadgodzin
+    } catch (error: any) {
+      console.error('Błąd podczas usuwania nadgodzin:', error);
+      alert(error.message || 'Wystąpił błąd podczas usuwania nadgodzin');
+    }
+  };
+
   const handleLogout = () => {
-    setBudget(defaultBudget);
     logout();
   };
 
-  if (loading) {
+  if (entriesLoading || budgetLoading || overtimesLoading) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Ładowanie...</div>
+      </div>
+    );
+  }
+
+  if (entriesError || budgetError || overtimesError) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <div className="text-red-600">
+          {entriesError && <div>Błąd wpisów: {entriesError}</div>}
+          {budgetError && <div>Błąd budżetu: {budgetError}</div>}
+          {overtimesError && <div>Błąd nadgodzin: {overtimesError}</div>}
+        </div>
       </div>
     );
   }
@@ -134,12 +172,50 @@ export default function Home() {
             entries={entries}
             onBudgetUpdate={handleBudgetUpdate} 
           />
-          <TimeEntry onSave={handleNewEntry} />
+
           <EntryHistory 
             entries={entries}
             onEdit={handleEditEntry}
             onDelete={handleDeleteEntry}
           />
+
+          {/* Zakładki */}
+          <div className="border-b border-slate-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('overtime')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'overtime'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                Rejestracja Nadgodzin
+              </button>
+              <button
+                onClick={() => setActiveTab('monthly')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'monthly'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                Zamknięcie Miesiąca
+              </button>
+            </nav>
+          </div>
+
+          {/* Zawartość zakładek */}
+          <div>
+            <TimeEntry 
+              onSave={handleApproveMonth}
+              approvedMonths={getApprovedMonths()}
+              overtimes={overtimes}
+              onAddOvertime={handleAddOvertime}
+              onDeleteOvertime={handleDeleteOvertime}
+              mode={activeTab as 'overtime' | 'monthly'}
+            />
+          </div>
         </div>
       </main>
     </div>

@@ -1,31 +1,19 @@
 import Card from './Card';
-
-interface Overtime {
-  date: string;
-  startTime: string;
-  endTime: string;
-  incidentNumber: string;
-  description: string;
-  duration: number;
-}
-
-interface TimeEntry {
-  month: string;
-  capexHours: number;
-  opexHours: number;
-  supportHours: number;
-  overtimes: Overtime[];
-  description: string;
-  overtimeHours: number;
-}
+import { TimeEntry } from '../types';
 
 interface EntryHistoryProps {
-  entries: TimeEntry[];
-  onEdit?: (index: number, updatedEntry: TimeEntry) => void;  // Opcjonalne
-  onDelete?: (index: number) => void;  // Opcjonalne
+  entries: Omit<TimeEntry, 'overtimes'>[];
+  onEdit?: (id: number, updatedEntry: Partial<TimeEntry>) => void;
+  onDelete?: (id: number) => void;
 }
 
 export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistoryProps) {
+  const handleDelete = (id: number) => {
+    if (window.confirm('Czy na pewno chcesz usunąć ten wpis? Tej operacji nie można cofnąć.')) {
+      onDelete?.(id);
+    }
+  };
+
   return (
     <Card title="Historia rozliczeń">
       <div className="overflow-x-auto">
@@ -44,12 +32,14 @@ export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistory
           <tbody className="divide-y divide-slate-200">
             {entries
               .sort((a, b) => b.month.localeCompare(a.month))
-              .map((entry, index) => {
-                const totalHours = entry.capexHours + entry.opexHours + entry.supportHours + 
-                  entry.overtimes.reduce((sum, ot) => sum + ot.duration, 0);
+              .map((entry) => {
+                const totalHours = entry.capexHours + entry.opexHours + entry.supportHours + entry.overtimeHours;
+                const entryId = entry.id;
+
+                if (!entryId) return null;
 
                 return (
-                  <tr key={entry.month}>
+                  <tr key={entryId}>
                     <td className="px-4 py-2 text-sm text-slate-900">
                       {new Date(entry.month + '-01').toLocaleDateString('pl-PL', {
                         year: 'numeric',
@@ -59,9 +49,7 @@ export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistory
                     <td className="px-4 py-2 text-sm text-slate-900">{entry.capexHours}h</td>
                     <td className="px-4 py-2 text-sm text-slate-900">{entry.opexHours}h</td>
                     <td className="px-4 py-2 text-sm text-slate-900">{entry.supportHours}h</td>
-                    <td className="px-4 py-2 text-sm text-slate-900">
-                      {entry.overtimes.reduce((sum, ot) => sum + ot.duration, 0)}h
-                    </td>
+                    <td className="px-4 py-2 text-sm text-slate-900">{entry.overtimeHours}h</td>
                     <td className="px-4 py-2 text-sm font-medium text-slate-900">
                       {totalHours}h
                     </td>
@@ -69,7 +57,7 @@ export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistory
                       <td className="px-4 py-2 space-x-2">
                         {onEdit && (
                           <button
-                            onClick={() => onEdit(index, {...entry})}
+                            onClick={() => onEdit(entryId, {...entry})}
                             className="text-blue-600 hover:text-blue-800"
                           >
                             Edytuj
@@ -77,7 +65,7 @@ export default function EntryHistory({ entries, onEdit, onDelete }: EntryHistory
                         )}
                         {onDelete && (
                           <button
-                            onClick={() => onDelete(index)}
+                            onClick={() => handleDelete(entryId)}
                             className="text-red-600 hover:text-red-800"
                           >
                             Usuń
