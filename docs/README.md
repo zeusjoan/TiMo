@@ -11,7 +11,7 @@
 8. [Rozwój projektu](#rozwój-projektu)
 
 ## Wprowadzenie
-TiMo to aplikacja webowa zbudowana w oparciu o framework Next.js, służąca do zarządzania procesami w firmie. Aplikacja pozwala na generowanie raportów PDF, zarządzanie danymi w bazach MongoDB i SQLite, oraz oferuje intuicyjny interfejs użytkownika.
+TiMo to aplikacja webowa zbudowana w oparciu o framework Next.js, służąca do zarządzania procesami w firmie. Aplikacja pozwala na generowanie raportów PDF, zarządzanie danymi w bazie MSSQL, oraz oferuje intuicyjny interfejs użytkownika.
 
 ## Instalacja na MacBooku
 
@@ -29,21 +29,19 @@ echo 'export PATH="/usr/local/opt/node@18/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-#### Git
-```bash
-brew install git
-```
+#### Docker Desktop dla Mac
+Pobierz i zainstaluj Docker Desktop ze strony: https://www.docker.com/products/docker-desktop
 
-#### MongoDB
-```bash
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
-```
+Po instalacji uruchom Docker Desktop.
 
-#### SQLite
+#### MSSQL w Dockerze
 ```bash
-brew install sqlite3
+docker pull mcr.microsoft.com/mssql/server
+docker run -d --name mssql-server \
+    -e "ACCEPT_EULA=Y" \
+    -e "SA_PASSWORD=YourStrong@Passw0rd" \
+    -p 1433:1433 \
+    mcr.microsoft.com/mssql/server
 ```
 
 ### 2. Instalacja aplikacji
@@ -68,7 +66,11 @@ touch .env
 ```
 Dodaj do pliku .env:
 ```
-MONGODB_URI=mongodb://localhost:27017/timo
+DB_HOST=localhost
+DB_PORT=1433
+DB_USER=sa
+DB_PASSWORD=YourStrong@Passw0rd
+DB_NAME=TiMoDB
 ```
 
 #### Uruchomienie aplikacji
@@ -79,14 +81,14 @@ Aplikacja będzie dostępna pod adresem: http://localhost:3000
 
 ### 3. Rozwiązywanie problemów
 
-#### Problem z MongoDB
-Sprawdź status MongoDB:
+#### Problem z połączeniem do MSSQL
+Sprawdź status kontenera:
 ```bash
-brew services list
+docker ps
 ```
-Restart MongoDB jeśli potrzebny:
+Restart kontenera jeśli potrzebny:
 ```bash
-brew services restart mongodb-community
+docker restart mssql-server
 ```
 
 #### Problem z node_modules
@@ -95,5 +97,23 @@ rm -rf node_modules
 rm package-lock.json
 npm install
 ```
+
+## Struktura projektu
+- `/components` - Komponenty React używane w aplikacji
+- `/contexts` - Konteksty React do zarządzania stanem aplikacji
+- `/hooks` - Własne hooki React
+- `/lib` - Biblioteki i narzędzia pomocnicze
+- `/models` - Modele danych dla baz danych
+- `/pages` - Strony aplikacji i endpointy API
+- `/public` - Zasoby statyczne (obrazy, ikony, itp.)
+- `/styles` - Style CSS i konfiguracja Tailwind
+- `/types` - Definicje typów TypeScript
+
+## Bazy danych
+### Microsoft SQL Server
+MSSQL jest używany jako główna baza danych dla:
+- Przechowywania danych klientów
+- Zarządzania zamówieniami
+- Przechowywania historii operacji
 
 [Reszta dokumentacji pozostaje bez zmian]
