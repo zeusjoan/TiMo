@@ -5,7 +5,7 @@
 2. [Instalacja na MacBooku](#instalacja-na-macbooku)
 3. [Struktura projektu](#struktura-projektu)
 4. [Technologie](#technologie)
-5. [Bazy danych](#bazy-danych)
+5. [Baza danych](#baza-danych)
 6. [Funkcjonalności](#funkcjonalności)
 
 ## Wprowadzenie
