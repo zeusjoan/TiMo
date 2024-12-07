@@ -1,17 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import TimeEntry from '../components/TimeEntry';
 import Summary from '../components/Summary';
 import EntryHistory from '../components/EntryHistory';
 import { useAuth } from '../contexts/AuthContext';
-
-interface Overtime {
-  date: string;
-  startTime: string;
-  endTime: string;
-  incidentNumber: string;
-  description: string;
-  duration: number;
-}
+import { useTimeEntries } from '../hooks/useTimeEntries';
 
 interface Budget {
   orderNumber: string;
@@ -23,16 +15,6 @@ interface Budget {
   opex: number;
   support: number;
   hourlyRate: number;
-}
-
-interface TimeEntry {
-  month: string;
-  capexHours: number;
-  opexHours: number;
-  supportHours: number;
-  overtimes: Overtime[];
-  description: string;
-  overtimeHours: number;
 }
 
 const defaultBudget: Budget = {
@@ -50,24 +32,18 @@ const defaultBudget: Budget = {
 export default function Home() {
   const { user, logout } = useAuth();
   const [budget, setBudget] = useState<Budget>(defaultBudget);
-  const [entries, setEntries] = useState<TimeEntry[]>([]);
-  const [initialized, setInitialized] = useState(false);
+  const { entries, loading, fetchEntries, addEntry, updateEntry, deleteEntry } = useTimeEntries();
 
   useEffect(() => {
-    if (!initialized && typeof window !== 'undefined') {
-      const savedBudget = localStorage.getItem('budget');
-      const savedEntries = localStorage.getItem('timeEntries');
-      
+    if (user) {
+      fetchEntries();
+      // Wczytaj budżet z localStorage (można później przenieść do bazy danych)
+      const savedBudget = localStorage.getItem(`${user}_budget`);
       if (savedBudget) {
         setBudget(JSON.parse(savedBudget));
       }
-      if (savedEntries) {
-        setEntries(JSON.parse(savedEntries));
-      }
-      
-      setInitialized(true);
     }
-  }, [initialized]);
+  }, [user, fetchEntries]);
 
   const summary = {
     capexUsed: entries.reduce((sum, entry) => sum + entry.capexHours, 0),
@@ -75,37 +51,53 @@ export default function Home() {
     supportUsed: entries.reduce((sum, entry) => sum + entry.supportHours, 0)
   };
 
-  const handleBudgetUpdate = useCallback((newBudget: Budget) => {
+  const handleBudgetUpdate = (newBudget: Budget) => {
     setBudget(newBudget);
-    localStorage.setItem('budget', JSON.stringify(newBudget));
-  }, []);
+    if (user) {
+      localStorage.setItem(`${user}_budget`, JSON.stringify(newBudget));
+    }
+  };
 
-  const handleNewEntry = useCallback((entry: TimeEntry) => {
-    setEntries(prev => {
-      const newEntries = [...prev, entry];
-      localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-      return newEntries;
-    });
-  }, []);
+  const handleNewEntry = async (entry: any) => {
+    try {
+      await addEntry(entry);
+    } catch (error) {
+      console.error('Błąd podczas dodawania wpisu:', error);
+      alert('Wystąpił błąd podczas zapisywania wpisu');
+    }
+  };
 
-  const handleEditEntry = useCallback((index: number, updatedEntry: TimeEntry) => {
-    setEntries(prev => {
-      const newEntries = [...prev];
-      newEntries[index] = updatedEntry;
-      localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-      return newEntries;
-    });
-  }, []);
+  const handleEditEntry = async (index: number, updatedEntry: any) => {
+    try {
+      const entryToUpdate = entries[index];
+      if (entryToUpdate._id) {
+        await updateEntry(entryToUpdate._id, updatedEntry);
+      }
+    } catch (error) {
+      console.error('Błąd podczas aktualizacji wpisu:', error);
+      alert('Wystąpił błąd podczas aktualizacji wpisu');
+    }
+  };
 
-  const handleDeleteEntry = useCallback((index: number) => {
-    setEntries(prev => {
-      const newEntries = prev.filter((_, i) => i !== index);
-      localStorage.setItem('timeEntries', JSON.stringify(newEntries));
-      return newEntries;
-    });
-  }, []);
+  const handleDeleteEntry = async (index: number) => {
+    try {
+      const entryToDelete = entries[index];
+      if (entryToDelete._id) {
+        await deleteEntry(entryToDelete._id);
+      }
+    } catch (error) {
+      console.error('Błąd podczas usuwania wpisu:', error);
+      alert('Wystąpił błąd podczas usuwania wpisu');
+    }
+  };
 
-  if (!initialized) {
+  // Reset stanu przy wylogowaniu
+  const handleLogout = () => {
+    setBudget(defaultBudget);
+    logout();
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Ładowanie...</div>
@@ -125,7 +117,7 @@ export default function Home() {
               Zalogowany jako: {user}
             </span>
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             >
               Wyloguj

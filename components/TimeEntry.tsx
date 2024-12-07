@@ -216,7 +216,7 @@ export default function TimeEntryForm({ onSave, initialEntry }: TimeEntryFormPro
                 />
               </div>
               <div className="col-span-1">
-                <label className="block text-sm font-medium text-slate-700">Nr incydentu</label>
+                <label className="block text-sm font-medium text-slate-700">Incydent</label>
                 <input
                   type="text"
                   value={currentOvertime.incidentNumber}
@@ -255,7 +255,7 @@ export default function TimeEntryForm({ onSave, initialEntry }: TimeEntryFormPro
                       <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Od</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Do</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Czas</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Nr incydentu</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Incydent</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Opis</th>
                       <th className="px-4 py-2"></th>
                     </tr>

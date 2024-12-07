@@ -12,9 +12,13 @@
     "date-fns": "^4.1.0",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "mongodb": "^6.11.0",
+    "mongoose": "^8.8.4",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106"
+    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "sequelize": "^6.37.5",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/node": "^20",
