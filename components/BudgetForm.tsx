@@ -1,13 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Budget } from '../types';
 
 interface BudgetFormProps {
   initialBudget: Budget;
   onSave: (budget: Budget) => void;
+  existingYears?: number[];
 }
 
-export default function BudgetForm({ initialBudget, onSave }: BudgetFormProps) {
+export default function BudgetForm({ initialBudget, onSave, existingYears = [] }: BudgetFormProps) {
   const [budget, setBudget] = useState<Budget>(initialBudget);
+  const currentYear = new Date().getFullYear();
+  const [availableYears] = useState(() => {
+    const years = [];
+    for (let i = currentYear - 5; i <= currentYear + 1; i++) {
+      if (!existingYears.includes(i)) {
+        years.push(i);
+      }
+    }
+    return years;
+  });
+
+  useEffect(() => {
+    setBudget(initialBudget);
+  }, [initialBudget]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +36,23 @@ export default function BudgetForm({ initialBudget, onSave }: BudgetFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-slate-700">
+          Rok budżetowy
+        </label>
+        <select
+          value={budget.year}
+          onChange={(e) => setBudget({ ...budget, year: parseInt(e.target.value) })}
+          className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md text-slate-900"
+          required
+        >
+          <option value={budget.year}>{budget.year}</option>
+          {availableYears.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-slate-700">
           Numer zamówienia

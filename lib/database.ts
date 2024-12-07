@@ -1,6 +1,5 @@
 import { Sequelize } from 'sequelize';
 import path from 'path';
-import fs from 'fs';
 
 // Tworzymy instancję Sequelize z bazą SQLite
 const sequelize = new Sequelize({
@@ -15,11 +14,8 @@ const sequelize = new Sequelize({
   }
 });
 
-// Funkcja do sprawdzania czy baza danych istnieje
-async function checkDatabaseExists() {
-  const dbPath = path.join(process.cwd(), 'database.sqlite');
-  return fs.existsSync(dbPath);
-}
+// Eksportujemy instancję
+export default sequelize;
 
 // Funkcja do inicjalizacji połączenia
 export async function initDatabase() {
@@ -28,20 +24,10 @@ export async function initDatabase() {
     await sequelize.authenticate();
     console.log('Połączenie z bazą danych nawiązane.');
     
-    const dbExists = await checkDatabaseExists();
-    console.log('Status bazy danych:', dbExists ? 'Istnieje' : 'Nie istnieje');
-
-    if (!dbExists) {
-      console.log('Tworzenie nowej bazy danych...');
-      // Przy pierwszym uruchomieniu tworzymy tabele
-      await sequelize.sync({ force: true });
-      console.log('Utworzono nową bazę danych i tabele.');
-    } else {
-      console.log('Synchronizacja istniejących modeli...');
-      // Przy kolejnych uruchomieniach tylko synchronizujemy modele
-      await sequelize.sync();
-      console.log('Synchronizacja modeli zakończona.');
-    }
+    console.log('Synchronizacja modeli...');
+    // Synchronizujemy modele bez force: true, żeby zachować dane
+    await sequelize.sync();
+    console.log('Modele zsynchronizowane.');
     
     return true;
   } catch (error) {
@@ -68,5 +54,3 @@ export async function closeDatabase() {
     return false;
   }
 }
-
-export default sequelize;

@@ -13,6 +13,7 @@ interface BudgetAttributes {
   opex: number;
   support: number;
   hourlyRate: number;
+  year: number;
 }
 
 class Budget extends Model<BudgetAttributes> implements BudgetAttributes {
@@ -27,6 +28,7 @@ class Budget extends Model<BudgetAttributes> implements BudgetAttributes {
   public opex!: number;
   public support!: number;
   public hourlyRate!: number;
+  public year!: number;
 }
 
 Budget.init(
@@ -74,6 +76,11 @@ Budget.init(
       type: DataTypes.FLOAT,
       allowNull: false,
       defaultValue: 0,
+    },
+    year: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: new Date().getFullYear(),
     },
   },
   {

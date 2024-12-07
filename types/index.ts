@@ -36,6 +36,7 @@ export interface Budget {
   opex: number;
   support: number;
   hourlyRate: number;
+  year: number;
 }
 
 export interface Summary {

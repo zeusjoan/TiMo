@@ -22,7 +22,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         order: [['month', 'DESC']]
       });
 
-      return res.status(200).json(entries.map(entry => entry.toJSON()));
+      // Return empty array if no entries found
+      return res.status(200).json(entries?.length ? entries.map(entry => entry.toJSON()) : []);
 
     case 'POST':
       const { userId: newUserId, month } = req.body;
@@ -51,7 +52,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         }
       });
 
-      const overtimeHours = overtimes.reduce((sum, ot) => sum + ot.duration, 0);
+      const overtimeHours = overtimes?.length ? overtimes.reduce((sum, ot) => sum + ot.duration, 0) : 0;
 
       // Tworzymy wpis z sumą nadgodzin
       const entry = await TimeEntry.create({

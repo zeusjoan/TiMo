@@ -29,7 +29,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         order: [['date', 'DESC'], ['startTime', 'ASC']]
       });
 
-      return res.status(200).json(overtimes.map(overtime => overtime.toJSON()));
+      // Return empty array if no overtimes found
+      return res.status(200).json(overtimes?.length ? overtimes.map(overtime => overtime.toJSON()) : []);
 
     case 'POST':
       const newOvertime = await Overtime.create({

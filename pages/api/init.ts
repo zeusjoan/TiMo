@@ -1,5 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { initDatabase } from '../../lib/database';
+// Import models to ensure they are registered with Sequelize
+import '../../models/Budget';
+import '../../models/TimeEntry';
+import '../../models/Overtime';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -8,6 +12,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     console.log('Rozpoczynanie inicjalizacji bazy danych...');
+    
+    // Inicjalizacja bazy danych i modeli bez wymuszania recreate
     const success = await initDatabase();
     
     if (success) {

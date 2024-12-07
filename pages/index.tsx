@@ -10,6 +10,7 @@ import { TimeEntry as TimeEntryType, Overtime, Budget } from '../types';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('overtime'); // 'overtime' lub 'monthly'
+  const [existingYears, setExistingYears] = useState<number[]>([]);
   const { user, logout } = useAuth();
   const { 
     entries, 
@@ -35,7 +36,8 @@ export default function Home() {
     budget, 
     loading: budgetLoading, 
     error: budgetError,
-    fetchBudget, 
+    fetchBudget,
+    fetchAllBudgets,
     updateBudget 
   } = useBudget();
 
@@ -45,19 +47,41 @@ export default function Home() {
       fetchEntries();
       fetchOvertimes();
       fetchBudget();
+      loadExistingYears();
     }
   }, [user, fetchEntries, fetchOvertimes, fetchBudget]);
 
+  const loadExistingYears = async () => {
+    try {
+      const budgets = await fetchAllBudgets();
+      // Ensure budgets is an array, if not use empty array
+      const years = Array.isArray(budgets) ? budgets.map(b => b.year) : [];
+      if (years.length === 0) {
+        years.push(new Date().getFullYear());
+      }
+      setExistingYears(years.sort((a, b) => b - a)); // Sort descending
+    } catch (error) {
+      console.error('Error loading years:', error);
+      // Set current year as fallback
+      setExistingYears([new Date().getFullYear()]);
+    }
+  };
+
+  const handleYearChange = async (year: number) => {
+    await fetchBudget(year);
+  };
+
   const summary = {
-    capexUsed: entries.reduce((sum, entry) => sum + entry.capexHours, 0),
-    opexUsed: entries.reduce((sum, entry) => sum + entry.opexHours, 0),
-    supportUsed: entries.reduce((sum, entry) => sum + entry.supportHours, 0)
+    capexUsed: Array.isArray(entries) ? entries.reduce((sum, entry) => sum + entry.capexHours, 0) : 0,
+    opexUsed: Array.isArray(entries) ? entries.reduce((sum, entry) => sum + entry.opexHours, 0) : 0,
+    supportUsed: Array.isArray(entries) ? entries.reduce((sum, entry) => sum + entry.supportHours, 0) : 0
   };
 
   const handleBudgetUpdate = async (newBudget: Budget) => {
     try {
       await updateBudget(newBudget);
       console.log('Budżet zaktualizowany pomyślnie');
+      loadExistingYears(); // Refresh the list of years
     } catch (error) {
       console.error('Błąd podczas aktualizacji budżetu:', error);
       alert('Wystąpił błąd podczas zapisywania budżetu');
@@ -169,12 +193,14 @@ export default function Home() {
           <Summary 
             budget={budget} 
             summary={summary} 
-            entries={entries}
-            onBudgetUpdate={handleBudgetUpdate} 
+            entries={entries || []}
+            onBudgetUpdate={handleBudgetUpdate}
+            onYearChange={handleYearChange}
+            existingYears={existingYears}
           />
 
           <EntryHistory 
-            entries={entries}
+            entries={entries || []}
             onEdit={handleEditEntry}
             onDelete={handleDeleteEntry}
           />
@@ -210,7 +236,7 @@ export default function Home() {
             <TimeEntry 
               onSave={handleApproveMonth}
               approvedMonths={getApprovedMonths()}
-              overtimes={overtimes}
+              overtimes={overtimes || []}
               onAddOvertime={handleAddOvertime}
               onDeleteOvertime={handleDeleteOvertime}
               mode={activeTab as 'overtime' | 'monthly'}

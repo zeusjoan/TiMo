@@ -11,15 +11,38 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         ? req.query.userId[0] 
         : req.query.userId;
 
+      const year = Array.isArray(req.query.year)
+        ? parseInt(req.query.year[0])
+        : req.query.year
+          ? parseInt(req.query.year)
+          : new Date().getFullYear();
+
       if (!userId) {
         return res.status(400).json({ error: 'Brak ID użytkownika' });
       }
 
       const budget = await Budget.findOne({
-        where: { userId }
+        where: { userId, year }
       });
 
       return res.status(200).json(budget ? budget.toJSON() : null);
+
+    case 'GET_ALL':
+      const allUserId = Array.isArray(req.query.userId) 
+        ? req.query.userId[0] 
+        : req.query.userId;
+
+      if (!allUserId) {
+        return res.status(400).json({ error: 'Brak ID użytkownika' });
+      }
+
+      const budgets = await Budget.findAll({
+        where: { userId: allUserId },
+        order: [['year', 'DESC']]
+      });
+
+      // Return empty array if no budgets found
+      return res.status(200).json(budgets?.length ? budgets.map(b => b.toJSON()) : []);
 
     case 'POST':
     case 'PUT':
@@ -31,15 +54,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: 'Brak ID użytkownika' });
       }
 
-      const [updatedBudget, created] = await Budget.upsert({
+      // Ensure year is set
+      const updateData = {
         ...req.body,
-        userId: updateUserId
-      });
+        userId: updateUserId,
+        year: req.body.year || new Date().getFullYear()
+      };
+
+      const [updatedBudget, created] = await Budget.upsert(updateData);
 
       return res.status(created ? 201 : 200).json(updatedBudget.toJSON());
 
     default:
-      res.setHeader('Allow', ['GET', 'POST', 'PUT']);
+      res.setHeader('Allow', ['GET', 'GET_ALL', 'POST', 'PUT']);
       return res.status(405).json({ error: `Metoda ${method} nie jest dozwolona` });
   }
 }

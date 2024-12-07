@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Card from './Card';
 import Modal from './Modal';
 import BudgetForm from './BudgetForm';
 import BudgetChart from './BudgetChart';
-import { TimeEntry, Overtime, Budget } from '../types';
+import { Budget, TimeEntry } from '../types';
 
 interface SummaryProps {
   budget: Budget;
@@ -14,10 +14,20 @@ interface SummaryProps {
   };
   entries?: TimeEntry[];
   onBudgetUpdate: (budget: Budget) => void;
+  onYearChange?: (year: number) => void;
+  existingYears?: number[];
 }
 
-export default function Summary({ budget, summary, entries = [], onBudgetUpdate }: SummaryProps) {
+export default function Summary({ 
+  budget, 
+  summary, 
+  entries = [], 
+  onBudgetUpdate,
+  onYearChange,
+  existingYears = []
+}: SummaryProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
 
   const currentMonth = new Date().toISOString().slice(0, 7);
   const currentMonthEntries = entries.filter((entry: TimeEntry) => entry.month === currentMonth);
@@ -27,7 +37,7 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
     opexUsed: currentMonthEntries.reduce((sum: number, entry: TimeEntry) => sum + entry.opexHours, 0),
     supportUsed: currentMonthEntries.reduce((sum: number, entry: TimeEntry) => sum + entry.supportHours, 0),
     overtimeHours: currentMonthEntries.reduce((sum: number, entry: TimeEntry) => 
-      sum + (entry.overtimes?.reduce((oSum: number, ot: Overtime) => oSum + ot.duration, 0) || 0), 0
+      sum + (entry.overtimes?.reduce((oSum: number, ot) => oSum + ot.duration, 0) || 0), 0
     )
   };
 
@@ -52,14 +62,29 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
     }
   ];
 
+  const handleYearChange = (year: number) => {
+    onYearChange?.(year);
+  };
+
   return (
     <Card title="Podsumowanie" action={
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-      >
-        {budget.orderNumber ? 'Edytuj zamówienie' : 'Dodaj zamówienie'}
-      </button>
+      <div className="flex items-center gap-4">
+        <select
+          value={budget.year}
+          onChange={(e) => handleYearChange(parseInt(e.target.value))}
+          className="px-3 py-2 border border-slate-300 rounded-md text-slate-900 bg-white"
+        >
+          {existingYears.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          {budget.orderNumber ? 'Edytuj zamówienie' : 'Dodaj zamówienie'}
+        </button>
+      </div>
     }>
       {/* Informacje o zamówieniu */}
       <div className="mb-6">
@@ -159,7 +184,7 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {entry.overtimes.map((overtime: Overtime, idx: number) => (
+                  {entry.overtimes.map((overtime, idx) => (
                     <tr key={idx}>
                       <td className="px-4 py-2 text-sm text-slate-900">{overtime.date}</td>
                       <td className="px-4 py-2 text-sm text-slate-900">
@@ -184,6 +209,7 @@ export default function Summary({ budget, summary, entries = [], onBudgetUpdate 
       >
         <BudgetForm
           initialBudget={budget}
+          existingYears={existingYears}
           onSave={(newBudget) => {
             onBudgetUpdate(newBudget);
             setIsModalOpen(false);

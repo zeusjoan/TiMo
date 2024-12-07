@@ -1,17 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-
-export interface Budget {
-  orderNumber: string;
-  supplierNumber: string;
-  documentDate: string;
-  deliveryDate: string;
-  contractNumber: string;
-  capex: number;
-  opex: number;
-  support: number;
-  hourlyRate: number;
-}
+import { Budget } from '../types';
 
 const defaultBudget: Budget = {
   orderNumber: '',
@@ -22,7 +11,8 @@ const defaultBudget: Budget = {
   capex: 0,
   opex: 0,
   support: 0,
-  hourlyRate: 0
+  hourlyRate: 0,
+  year: new Date().getFullYear()
 };
 
 export function useBudget() {
@@ -31,7 +21,7 @@ export function useBudget() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const fetchBudget = useCallback(async () => {
+  const fetchBudget = useCallback(async (year?: number) => {
     if (!user) {
       setError('Użytkownik nie jest zalogowany');
       return;
@@ -42,7 +32,8 @@ export function useBudget() {
       setError(null);
       console.log('Pobieranie budżetu dla użytkownika:', user);
       
-      const response = await fetch(`/api/budget?userId=${user}`);
+      const yearParam = year || new Date().getFullYear();
+      const response = await fetch(`/api/budget?userId=${user}&year=${yearParam}`);
       console.log('Odpowiedź z API:', response.status);
       
       if (!response.ok) {
@@ -56,14 +47,38 @@ export function useBudget() {
       if (data) {
         setBudget(data);
       } else {
-        setBudget(defaultBudget);
+        setBudget({...defaultBudget, year: yearParam});
       }
     } catch (error: any) {
       console.error('Błąd podczas pobierania budżetu:', error);
       setError(error.message || 'Błąd podczas pobierania budżetu');
-      setBudget(defaultBudget);
+      setBudget({...defaultBudget, year: year || new Date().getFullYear()});
     } finally {
       setLoading(false);
+    }
+  }, [user]);
+
+  const fetchAllBudgets = useCallback(async () => {
+    if (!user) {
+      setError('Użytkownik nie jest zalogowany');
+      return [];
+    }
+
+    try {
+      setError(null);
+      const response = await fetch(`/api/budget?userId=${user}&method=GET_ALL`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Błąd podczas pobierania budżetów');
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('Błąd podczas pobierania budżetów:', error);
+      setError(error.message || 'Błąd podczas pobierania budżetów');
+      return [];
     }
   }, [user]);
 
@@ -110,6 +125,7 @@ export function useBudget() {
     loading,
     error,
     fetchBudget,
+    fetchAllBudgets,
     updateBudget,
   };
 }

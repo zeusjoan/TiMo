@@ -101,7 +101,7 @@ export default function TimeEntryForm({
   
     const handleAddOvertime = () => {
       if (currentOvertime.date && currentOvertime.startTime && currentOvertime.endTime) {
-        // Sprawdź czy miesiąc z daty nadgodzin jest już zatwierdzony
+        // Extract month from the date for consistency
         const overtimeMonth = currentOvertime.date.slice(0, 7);
         if (isMonthApproved(overtimeMonth)) {
           alert('Nie można dodać nadgodzin do zatwierdzonego miesiąca.');
@@ -111,6 +111,7 @@ export default function TimeEntryForm({
         const duration = calculateDuration(currentOvertime.startTime, currentOvertime.endTime);
         const newOvertime = { 
           ...currentOvertime, 
+          month: overtimeMonth, // Ensure month is set from the date
           duration
         };
         
@@ -134,9 +135,8 @@ export default function TimeEntryForm({
       }
     };
 
-    const totalOvertime = overtimes
-      .filter(ot => !ot.isApproved && ot.date.startsWith(entry.month))
-      .reduce((sum, ot) => sum + ot.duration, 0);
+    const filteredOvertimes = overtimes.filter(ot => !ot.isApproved && ot.month === entry.month);
+    const totalOvertime = filteredOvertimes.reduce((sum, ot) => sum + ot.duration, 0);
 
     // Renderowanie formularza nadgodzin
     const renderOvertimeForm = () => (
@@ -208,7 +208,7 @@ export default function TimeEntryForm({
           </div>
         </div>
 
-        {overtimes.length > 0 && (
+        {filteredOvertimes.length > 0 && (
           <div className="mt-4 border rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
@@ -223,26 +223,24 @@ export default function TimeEntryForm({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {overtimes
-                  .filter(ot => !ot.isApproved && ot.date.startsWith(entry.month))
-                  .map((overtime) => (
-                    <tr key={overtime.id}>
-                      <td className="px-4 py-2 text-sm text-slate-900">{overtime.date}</td>
-                      <td className="px-4 py-2 text-sm text-slate-900">{overtime.startTime}</td>
-                      <td className="px-4 py-2 text-sm text-slate-900">{overtime.endTime}</td>
-                      <td className="px-4 py-2 text-sm text-slate-900">{overtime.duration}h</td>
-                      <td className="px-4 py-2 text-sm text-slate-900">{overtime.incidentNumber}</td>
-                      <td className="px-4 py-2 text-sm text-slate-900">{overtime.description}</td>
-                      <td className="px-4 py-2">
-                        <button
-                          type="button"
-                          onClick={() => overtime.id && handleDeleteOvertime(overtime.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Usuń
-                        </button>
-                      </td>
-                    </tr>
+                {filteredOvertimes.map((overtime) => (
+                  <tr key={overtime.id}>
+                    <td className="px-4 py-2 text-sm text-slate-900">{overtime.date}</td>
+                    <td className="px-4 py-2 text-sm text-slate-900">{overtime.startTime}</td>
+                    <td className="px-4 py-2 text-sm text-slate-900">{overtime.endTime}</td>
+                    <td className="px-4 py-2 text-sm text-slate-900">{overtime.duration}h</td>
+                    <td className="px-4 py-2 text-sm text-slate-900">{overtime.incidentNumber}</td>
+                    <td className="px-4 py-2 text-sm text-slate-900">{overtime.description}</td>
+                    <td className="px-4 py-2">
+                      <button
+                        type="button"
+                        onClick={() => overtime.id && handleDeleteOvertime(overtime.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Usuń
+                      </button>
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
