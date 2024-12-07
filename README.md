@@ -1,40 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Dokumentacja projektu TiMo
 
-## Getting Started
+## Spis treści
+1. [Wprowadzenie](#wprowadzenie)
+2. [Instalacja na MacBooku](#instalacja-na-macbooku)
+3. [Struktura projektu](#struktura-projektu)
+4. [Technologie](#technologie)
+5. [Bazy danych](#bazy-danych)
+6. [Funkcjonalności](#funkcjonalności)
 
-First, run the development server:
+## Wprowadzenie
+TiMo to aplikacja webowa zbudowana w oparciu o framework Next.js, służąca do zarządzania procesami w firmie. Aplikacja pozwala na generowanie raportów PDF, zarządzanie danymi w bazie SQLite, oraz oferuje intuicyjny interfejs użytkownika.
+
+## Instalacja na MacBooku
+
+### 1. Instalacja wymaganych narzędzi
+
+Otwórz Terminal i wykonaj poniższe komendy:
+
+a) Zainstaluj Homebrew (jeśli nie masz):
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+b) Zainstaluj Node.js:
+```bash
+brew install node@18
+```
+
+c) SQLite jest już zainstalowany na MacOS, ale gdyby był potrzebny:
+```bash
+brew install sqlite3
+```
+
+### 2. Instalacja aplikacji
+
+a) Przejdź do katalogu, gdzie chcesz zainstalować aplikację:
+```bash
+cd ~/Documents
+mkdir projekty
+cd projekty
+```
+
+b) Sklonuj repozytorium i zainstaluj zależności:
+```bash
+git clone https://github.com/zeusjoan/TiMo.git
+cd TiMo
+npm install
+```
+
+### 3. Uruchomienie aplikacji
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aplikacja będzie dostępna pod adresem: http://localhost:3000
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+### 4. Rozwiązywanie problemów
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Jeśli wystąpią problemy z modułami node:
+```bash
+rm -rf node_modules
+rm package-lock.json
+npm install
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+## Struktura projektu
+- `/components` - Komponenty React używane w aplikacji
+- `/contexts` - Konteksty React do zarządzania stanem aplikacji
+- `/hooks` - Własne hooki React
+- `/lib` - Biblioteki i narzędzia pomocnicze
+- `/models` - Modele danych dla bazy SQLite
+- `/pages` - Strony aplikacji i endpointy API
+- `/public` - Zasoby statyczne (obrazy, ikony, itp.)
+- `/styles` - Style CSS i konfiguracja Tailwind
+- `/types` - Definicje typów TypeScript
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Technologie
+- **Frontend**: 
+  - Next.js 15.0.3
+  - React 19.0.0-rc
+  - TypeScript
+  - Tailwind CSS
+  
+- **Biblioteki**:
+  - date-fns - formatowanie i manipulacja datami
+  - jspdf - generowanie dokumentów PDF
+  - jspdf-autotable - tworzenie tabel w PDF
+  - sequelize - ORM dla SQLite
+  
+- **Baza danych**:
+  - SQLite3 - lekka, plikowa baza danych
 
-## Learn More
+## Baza danych
+SQLite jest używany jako główna baza danych dla:
+- Przechowywania danych klientów
+- Zarządzania zamówieniami
+- Przechowywania historii operacji
+- Konfiguracji aplikacji
 
-To learn more about Next.js, take a look at the following resources:
+## Funkcjonalności
+1. **Zarządzanie danymi**
+   - Dodawanie, edycja i usuwanie rekordów
+   - Wyszukiwanie i filtrowanie danych
+   - Import i eksport danych
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+2. **Generowanie raportów**
+   - Tworzenie raportów PDF
+   - Automatyczne generowanie tabel
+   - Eksport danych do różnych formatów
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+3. **Interfejs użytkownika**
+   - Responsywny design
+   - Intuicyjna nawigacja
+   - Dostosowanie do różnych urządzeń
